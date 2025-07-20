@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildTrack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        .ios-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ios-button {
+            background-color: #0071e3;
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .ios-button:hover {
+            background-color: #0077ed;
+            transform: scale(1.02);
+        }
+        
+        .ios-button:active {
+            transform: scale(0.98);
+        }
+        
+        .ios-input {
+            background-color: rgba(240, 240, 247, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 10px 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .ios-input:focus {
+            background-color: rgba(245, 245, 247, 0.9);
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+            outline: none;
+        }
+        
+        .ios-tab {
+            color: #86868b;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .ios-tab.active {
+            color: #0071e3;
+            border-bottom: 2px solid #0071e3;
+        }
+        
+        .plot-card {
+            transition: all 0.3s ease;
+        }
+        
+        .plot-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .checkbox-ios {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #d2d2d7;
+            outline: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .checkbox-ios:checked {
+            background-color: #0071e3;
+            border-color: #0071e3;
+        }
+        
+        .checkbox-ios:checked::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 6px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .task-item {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .completed-task {
+            animation: fadeOut 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        
+        .search-bar {
+            background-color: rgba(240, 240, 247, 0.8);
+            border-radius: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e4e4e4;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #0071e3;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(18px);
+        }
+        
+        .activity-item {
+            border-left: 3px solid #0071e3;
+        }
+        
+        .price-completed {
+            text-decoration: line-through;
+            color: #86868b;
+        }
+        
+        .activity-item .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .activity-item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .extras-item {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .extras-badge {
+            background-color: #e4f2ff;
+            color: #0071e3;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+        
+        .extras-box {
+            background-color: #f9f9fb;
+            border: 1px solid #f0f0f2;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-semibold text-gray-800">BuildTrack</h1>
+                <div class="flex items-center space-x-4">
+                    <button id="newHouseTypeBtn" class="ios-button px-4 py-2 text-sm">
+                        <i class="fas fa-plus mr-2"></i>New House Type
+                    </button>
+                    <button id="newPlotBtn" class="ios-button px-4 py-2 text-sm">
+                        <i class="fas fa-plus mr-2"></i>New Plot
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- Search and Filter -->
+            <div class="mb-8">
+                <div class="search-bar flex items-center px-4 py-2 mb-4">
+                    <i class="fas fa-search text-gray-400 mr-3"></i>
+                    <input type="text" id="searchInput" placeholder="Search plots or house types..." class="bg-transparent w-full outline-none">
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button class="ios-tab active px-4 py-2" data-filter="all">All Plots</button>
+                    <button class="ios-tab px-4 py-2" data-filter="inProgress">In Progress</button>
+                    <button class="ios-tab px-4 py-2" data-filter="completed">Finaled</button>
+                    <button class="ios-tab px-4 py-2" data-filter="thisWeek">This Week</button>
+                </div>
+            </div>
+            
+            <!-- Plots Grid -->
+            <div id="plotsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Plots will be dynamically added here -->
+            </div>
+            
+            <!-- This Week Activity -->
+            <div id="thisWeekActivity" class="hidden">
+                <h2 class="text-xl font-semibold mb-4">This Week's Activity</h2>
+                <div class="ios-card p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium">Completed Work</h3>
+                        <div class="text-sm text-gray-500">
+                            <span id="weekStartDate">-</span> to <span id="weekEndDate">-</span>
+                        </div>
+                    </div>
+                    
+                    <div id="activityList" class="space-y-4">
+                        <!-- Activity items will be added here -->
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium">Total Earnings This Week:</span>
+                            <span id="totalEarnings" class="font-semibold text-lg">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- House Type Modal -->
+    <div id="houseTypeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="ios-card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Create House Type</h2>
+                <button class="text-gray-500 hover:text-gray-700" onclick="closeHouseTypeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="houseTypeForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">House Type Name</label>
+                    <input type="text" id="houseTypeName" class="ios-input w-full" placeholder="e.g. Beauwood" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">1st Fix Base Price (£)</label>
+                    <input type="number" id="firstFixBasePrice" class="ios-input w-full" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">2nd Fix Base Price (£)</label>
+                    <input type="number" id="secondFixBasePrice" class="ios-input w-full" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                
+                <button type="submit" class="ios-button w-full py-3">Create House Type</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Plot Modal -->
+    <div id="plotModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="ios-card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Create New Plot</h2>
+                <button class="text-gray-500 hover:text-gray-700" onclick="closePlotModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="plotForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Plot Number</label>
+                    <input type="number" id="plotNumber" class="ios-input w-full" placeholder="e.g. 51" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">House Type</label>
+                    <select id="plotHouseType" class="ios-input w-full" required>
+                        <option value="" disabled selected>Select a house type</option>
+                        <!-- House types will be dynamically added here -->
+                    </select>
+                </div>
+                
+                <button type="submit" class="ios-button w-full py-3">Create Plot</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Plot Details Modal -->
+    <div id="plotDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="ios-card w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="plotDetailsTitle" class="text-xl font-semibold">Plot Details</h2>
+                <button class="text-gray-500 hover:text-gray-700" onclick="closePlotDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <div class="flex space-x-4 border-b">
+                    <button class="ios-tab active px-4 py-2" data-tab="firstFix">1st Fix</button>
+                    <button class="ios-tab px-4 py-2" data-tab="secondFix">2nd Fix</button>
+                </div>
+            </div>
+            
+            <!-- 1st Fix Tab -->
+            <div id="firstFixTab" class="tab-content">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <label class="toggle-switch mr-3">
+                            <input type="checkbox" id="firstFixCompleted">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="font-medium">Mark 1st Fix as Completed</span>
+                    </div>
+                    <div id="firstFixCompletionDate" class="text-sm text-gray-500"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-medium">1st Fix Price</h3>
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-500 mr-2">Base price:</span>
+                            <span id="firstFixBaseDisplay" class="text-sm font-medium">£0.00</span>
+                        </div>
+                    </div>
+                    <div class="text-lg font-medium" id="firstFixPriceDisplay">£0.00</div>
+                </div>
+                
+                <!-- 1st Fix Extras Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-medium">Extras</h3>
+                        <button id="addFirstFixExtraBtn" class="ios-button px-3 py-1 text-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Extra
+                        </button>
+                    </div>
+                    
+                    <!-- Default EV Charger Extra -->
+                    <div class="extras-box">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <label class="toggle-switch mr-2">
+                                    <input type="checkbox" id="firstFixEvCharger" class="extra-toggle" data-fix="firstFix" data-name="EV Charger" data-price="25">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="text-sm font-medium">EV Charger</span>
+                            </div>
+                            <span class="text-sm font-medium">£25.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Extras List -->
+                    <div id="firstFixExtrasList" class="space-y-2">
+                        <!-- Custom extras will be added here -->
+                    </div>
+                    
+                    <!-- Add Extra Form (initially hidden) -->
+                    <div id="firstFixExtraForm" class="mt-3 bg-gray-50 rounded-lg p-3 hidden">
+                        <div class="flex flex-col space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Extra Name</label>
+                                <input type="text" id="firstFixExtraName" class="ios-input w-full" placeholder="e.g. Six Downlights">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price (£)</label>
+                                <input type="number" id="firstFixExtraPrice" class="ios-input w-full" placeholder="7.50" value="7.50" step="0.01" min="0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" id="firstFixExtraQuantity" class="ios-input w-full" placeholder="1" value="1" min="1">
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="button" id="saveFirstFixExtraBtn" class="ios-button flex-1 py-2">Add</button>
+                                <button type="button" id="cancelFirstFixExtraBtn" class="bg-gray-200 text-gray-700 rounded-lg flex-1 py-2">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Extras Price -->
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                        <span class="font-medium">Total with Extras:</span>
+                        <span id="firstFixTotalPrice" class="font-semibold">£0.00</span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium mb-3">Drawings</h3>
+                    <div class="file-input-container">
+                        <button class="ios-button w-full py-3 flex items-center justify-center">
+                            <i class="fas fa-upload mr-2"></i>Upload Drawings
+                            <input type="file" id="firstFixDrawings" class="file-input" multiple>
+                        </button>
+                    </div>
+                    <div id="firstFixDrawingsList" class="mt-4 space-y-2">
+                        <!-- Uploaded drawings will appear here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2nd Fix Tab -->
+            <div id="secondFixTab" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <label class="toggle-switch mr-3">
+                            <input type="checkbox" id="secondFixCompleted">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="font-medium">Mark 2nd Fix as Completed</span>
+                    </div>
+                    <div id="secondFixCompletionDate" class="text-sm text-gray-500"></div>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-medium">2nd Fix Price</h3>
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-500 mr-2">Base price:</span>
+                            <span id="secondFixBaseDisplay" class="text-sm font-medium">£0.00</span>
+                        </div>
+                    </div>
+                    <div class="text-lg font-medium" id="secondFixPriceDisplay">£0.00</div>
+                </div>
+                
+                <!-- 2nd Fix Extras Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-medium">Extras</h3>
+                        <button id="addSecondFixExtraBtn" class="ios-button px-3 py-1 text-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Extra
+                        </button>
+                    </div>
+                    
+                    <!-- Default EV Charger Extra -->
+                    <div class="extras-box">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <label class="toggle-switch mr-2">
+                                    <input type="checkbox" id="secondFixEvCharger" class="extra-toggle" data-fix="secondFix" data-name="EV Charger" data-price="25">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="text-sm font-medium">EV Charger</span>
+                            </div>
+                            <span class="text-sm font-medium">£25.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Default PV Install Extra -->
+                    <div class="extras-box">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <label class="toggle-switch mr-2">
+                                    <input type="checkbox" id="secondFixPvInstall" class="extra-toggle" data-fix="secondFix" data-name="PV Install" data-price="50">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="text-sm font-medium">PV Install</span>
+                            </div>
+                            <span class="text-sm font-medium">£50.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Extras List -->
+                    <div id="secondFixExtrasList" class="space-y-2">
+                        <!-- Custom extras will be added here -->
+                    </div>
+                    
+                    <!-- Add Extra Form (initially hidden) -->
+                    <div id="secondFixExtraForm" class="mt-3 bg-gray-50 rounded-lg p-3 hidden">
+                        <div class="flex flex-col space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Extra Name</label>
+                                <input type="text" id="secondFixExtraName" class="ios-input w-full" placeholder="e.g. Six Downlights">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price (£)</label>
+                                <input type="number" id="secondFixExtraPrice" class="ios-input w-full" placeholder="7.50" value="7.50" step="0.01" min="0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" id="secondFixExtraQuantity" class="ios-input w-full" placeholder="1" value="1" min="1">
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="button" id="saveSecondFixExtraBtn" class="ios-button flex-1 py-2">Add</button>
+                                <button type="button" id="cancelSecondFixExtraBtn" class="bg-gray-200 text-gray-700 rounded-lg flex-1 py-2">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Extras Price -->
+                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                        <span class="font-medium">Total with Extras:</span>
+                        <span id="secondFixTotalPrice" class="font-semibold">£0.00</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-medium">Remaining Tasks</h3>
+                        <button id="addTaskBtn" class="ios-button px-3 py-1 text-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Task
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center mb-4 hidden" id="newTaskForm">
+                        <input type="text" id="newTaskInput" class="ios-input w-full" placeholder="Enter task description">
+                        <button id="saveTaskBtn" class="ios-button ml-2 px-4 py-2">Add</button>
+                    </div>
+                    
+                    <ul id="tasksList" class="space-y-2">
+                        <!-- Tasks will be dynamically added here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="ios-card w-full max-w-md p-6">
+            <div class="text-center mb-6">
+                <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                <h3 class="text-xl font-semibold" id="confirmationTitle">Confirm Deletion</h3>
+                <p class="text-gray-600 mt-2" id="confirmationMessage">Are you sure you want to delete this item?</p>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button id="cancelConfirmation" class="flex-1 py-2 px-4 bg-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmAction" class="flex-1 py-2 px-4 bg-red-500 rounded-lg font-medium text-white hover:bg-red-600 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Data storage
+        let houseTypes = [];
+        let plots = [];
+        let activities = [];
+        let currentPlotId = null;
+        let confirmationCallback = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data from localStorage
+            loadData();
+            
+            // Event listeners for buttons
+            document.getElementById('newHouseTypeBtn').addEventListener('click', openHouseTypeModal);
+            document.getElementById('newPlotBtn').addEventListener('click', openPlotModal);
+            document.getElementById('houseTypeForm').addEventListener('submit', createHouseType);
+            document.getElementById('plotForm').addEventListener('submit', createPlot);
+            document.getElementById('addTaskBtn').addEventListener('click', showNewTaskForm);
+            document.getElementById('saveTaskBtn').addEventListener('click', addNewTask);
+            
+            // Fix completion toggles
+            document.getElementById('firstFixCompleted').addEventListener('change', toggleFirstFixCompletion);
+            document.getElementById('secondFixCompleted').addEventListener('change', toggleSecondFixCompletion);
+            
+            // Extras buttons and toggles
+            document.getElementById('addFirstFixExtraBtn').addEventListener('click', () => showExtraForm('firstFix'));
+            document.getElementById('addSecondFixExtraBtn').addEventListener('click', () => showExtraForm('secondFix'));
+            document.getElementById('saveFirstFixExtraBtn').addEventListener('click', () => saveExtra('firstFix'));
+            document.getElementById('saveSecondFixExtraBtn').addEventListener('click', () => saveExtra('secondFix'));
+            document.getElementById('cancelFirstFixExtraBtn').addEventListener('click', () => hideExtraForm('firstFix'));
+            document.getElementById('cancelSecondFixExtraBtn').addEventListener('click', () => hideExtraForm('secondFix'));
+            
+            // Default extras toggles
+            document.getElementById('firstFixEvCharger').addEventListener('change', function() {
+                toggleExtra(this, 'firstFix');
+            });
+            document.getElementById('secondFixEvCharger').addEventListener('change', function() {
+                toggleExtra(this, 'secondFix');
+            });
+            document.getElementById('secondFixPvInstall').addEventListener('change', function() {
+                toggleExtra(this, 'secondFix');
+            });
+            
+            // Tab switching
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Filter buttons
+            document.querySelectorAll('[data-filter]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    filterContent(filter);
+                    
+                    // Update active state
+                    document.querySelectorAll('[data-filter]').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                searchPlots(searchTerm);
+            });
+            
+            // File input change events
+            document.getElementById('firstFixDrawings').addEventListener('change', function(e) {
+                handleFileUpload(e, 'firstFix');
+            });
+            
+            // Confirmation modal buttons
+            document.getElementById('cancelConfirmation').addEventListener('click', closeConfirmationModal);
+            document.getElementById('confirmAction').addEventListener('click', executeConfirmedAction);
+            
+            // Sort plots by plot number
+            sortPlotsByNumber();
+            
+            // Initialize the UI
+            renderPlots();
+            updateHouseTypeDropdown();
+            updateWeekDates();
+        });
+        
+        // Data Loading and Saving
+        function loadData() {
+            houseTypes = JSON.parse(localStorage.getItem('houseTypes')) || [];
+            plots = JSON.parse(localStorage.getItem('plots')) || [];
+            activities = JSON.parse(localStorage.getItem('activities')) || [];
+            
+            // Migrate existing plots to include extras if they don't have them
+            plots.forEach(plot => {
+                if (!plot.firstFix.extras) {
+                    plot.firstFix.extras = [];
+                }
+                if (!plot.secondFix.extras) {
+                    plot.secondFix.extras = [];
+                }
+            });
+            
+            // Save migrated data
+            savePlots();
+        }
+        
+        function sortPlotsByNumber() {
+            plots.sort((a, b) => parseInt(a.plotNumber) - parseInt(b.plotNumber));
+        }
+        
+        // House Type Functions
+        function openHouseTypeModal() {
+            document.getElementById('houseTypeModal').classList.remove('hidden');
+        }
+        
+        function closeHouseTypeModal() {
+            document.getElementById('houseTypeModal').classList.add('hidden');
+            document.getElementById('houseTypeForm').reset();
+        }
+        
+        function createHouseType(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('houseTypeName').value;
+            const firstFixBasePrice = parseFloat(document.getElementById('firstFixBasePrice').value);
+            const secondFixBasePrice = parseFloat(document.getElementById('secondFixBasePrice').value);
+            
+            const newHouseType = {
+                id: Date.now().toString(),
+                name,
+                firstFixBasePrice,
+                secondFixBasePrice
+            };
+            
+            houseTypes.push(newHouseType);
+            saveHouseTypes();
+            updateHouseTypeDropdown();
+            closeHouseTypeModal();
+            
+            // Show confirmation
+            showNotification(`House type "${name}" created successfully`);
+        }
+        
+        function updateHouseTypeDropdown() {
+            const dropdown = document.getElementById('plotHouseType');
+            
+            // Clear existing options except the first one
+            while (dropdown.options.length > 1) {
+                dropdown.remove(1);
+            }
+            
+            // Add house types to dropdown
+            houseTypes.forEach(houseType => {
+                const option = document.createElement('option');
+                option.value = houseType.id;
+                option.textContent = houseType.name;
+                dropdown.appendChild(option);
+            });
+        }
+        
+        // Plot Functions
+        function openPlotModal() {
+            document.getElementById('plotModal').classList.remove('hidden');
+        }
+        
+        function closePlotModal() {
+            document.getElementById('plotModal').classList.add('hidden');
+            document.getElementById('plotForm').reset();
+        }
+        
+        function createPlot(e) {
+            e.preventDefault();
+            
+            const plotNumber = document.getElementById('plotNumber').value;
+            const houseTypeId = document.getElementById('plotHouseType').value;
+            const houseType = houseTypes.find(ht => ht.id === houseTypeId);
+            
+            if (!houseType) {
+                showNotification('Please select a valid house type', 'error');
+                return;
+            }
+            
+            const newPlot = {
+                id: Date.now().toString(),
+                plotNumber,
+                houseTypeId,
+                firstFix: {
+                    price: houseType.firstFixBasePrice,
+                    extras: [],
+                    drawings: [],
+                    completed: false,
+                    completionDate: null
+                },
+                secondFix: {
+                    price: houseType.secondFixBasePrice,
+                    extras: [],
+                    tasks: [],
+                    completed: false,
+                    completionDate: null
+                },
+                status: 'inProgress'
+            };
+            
+            plots.push(newPlot);
+            
+            // Sort plots by plot number
+            sortPlotsByNumber();
+            
+            savePlots();
+            renderPlots();
+            closePlotModal();
+            
+            // Show confirmation
+            showNotification(`Plot ${plotNumber} created successfully`);
+        }
+        
+        function renderPlots() {
+            const plotsGrid = document.getElementById('plotsGrid');
+            plotsGrid.innerHTML = '';
+            
+            if (plots.length === 0) {
+                plotsGrid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                        <i class="fas fa-home text-5xl mb-4"></i>
+                        <p class="text-lg">No plots added yet</p>
+                        <p class="text-sm mt-2">Click "New Plot" to add your first plot</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            plots.forEach(plot => {
+                const houseType = houseTypes.find(ht => ht.id === plot.houseTypeId);
+                if (!houseType) return;
+                
+                const completedTasks = plot.secondFix.tasks.filter(task => task.completed).length;
+                const totalTasks = plot.secondFix.tasks.length;
+                const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                
+                // Calculate total prices with extras
+                const firstFixTotalPrice = calculateTotalPrice('firstFix', plot);
+                const secondFixTotalPrice = calculateTotalPrice('secondFix', plot);
+                
+                const plotCard = document.createElement('div');
+                plotCard.className = 'plot-card ios-card p-5 cursor-pointer';
+                plotCard.dataset.plotId = plot.id;
+                plotCard.dataset.plotNumber = plot.plotNumber;
+                plotCard.dataset.houseType = houseType.name.toLowerCase();
+                
+                // Status badges
+                let statusBadges = '';
+                if (plot.firstFix.completed) {
+                    statusBadges += `<span class="bg-green-100 text-green-800 text-xs font-medium mr-1 px-2 py-0.5 rounded-full">1st Fix</span>`;
+                }
+                if (plot.secondFix.completed) {
+                    statusBadges += `<span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded-full">2nd Fix</span>`;
+                }
+                
+                // Apply strikethrough to completed fix prices
+                const firstFixPriceClass = plot.firstFix.completed ? 'price-completed' : '';
+                const secondFixPriceClass = plot.secondFix.completed ? 'price-completed' : '';
+                
+                // Get active extras badges - ONLY from 2nd fix
+                let extrasBadges = '';
+                const activeExtras = plot.secondFix.extras.filter(extra => extra.active);
+                if (activeExtras.length > 0) {
+                    extrasBadges = `<div class="mt-2 flex flex-wrap">`;
+                    activeExtras.forEach(extra => {
+                        extrasBadges += `<span class="extras-badge">${extra.name}</span>`;
+                    });
+                    extrasBadges += `</div>`;
+                }
+                
+                plotCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="text-lg font-semibold">Plot ${plot.plotNumber}</h3>
+                            <p class="text-sm text-gray-500">${houseType.name}</p>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="bg-gray-100 rounded-full px-3 py-1 text-xs font-medium mb-1 ${plot.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                                ${plot.status === 'completed' ? 'Finaled' : 'In Progress'}
+                            </div>
+                            <div class="flex">${statusBadges}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>1st Fix</span>
+                            <span class="${firstFixPriceClass}">£${firstFixTotalPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span>2nd Fix</span>
+                            <span class="${secondFixPriceClass}">£${secondFixTotalPrice.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    ${extrasBadges}
+                    
+                    <div class="mt-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Tasks</span>
+                            <span>${completedTasks}/${totalTasks}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                plotCard.addEventListener('click', () => openPlotDetails(plot.id));
+                plotsGrid.appendChild(plotCard);
+            });
+        }
+        
+        function openPlotDetails(plotId) {
+            currentPlotId = plotId;
+            const plot = plots.find(p => p.id === plotId);
+            if (!plot) return;
+            
+            const houseType = houseTypes.find(ht => ht.id === plot.houseTypeId);
+            if (!houseType) return;
+            
+            // Set title
+            document.getElementById('plotDetailsTitle').textContent = `Plot ${plot.plotNumber} - ${houseType.name}`;
+            
+            // Set price displays
+            document.getElementById('firstFixPriceDisplay').textContent = `£${plot.firstFix.price.toFixed(2)}`;
+            document.getElementById('secondFixPriceDisplay').textContent = `£${plot.secondFix.price.toFixed(2)}`;
+            document.getElementById('firstFixBaseDisplay').textContent = `£${houseType.firstFixBasePrice.toFixed(2)}`;
+            document.getElementById('secondFixBaseDisplay').textContent = `£${houseType.secondFixBasePrice.toFixed(2)}`;
+            
+            // Set completion toggles
+            document.getElementById('firstFixCompleted').checked = plot.firstFix.completed;
+            document.getElementById('secondFixCompleted').checked = plot.secondFix.completed;
+            
+            // Set completion dates if available
+            document.getElementById('firstFixCompletionDate').textContent = plot.firstFix.completionDate ? 
+                `Completed on ${formatDate(new Date(plot.firstFix.completionDate))}` : '';
+            document.getElementById('secondFixCompletionDate').textContent = plot.secondFix.completionDate ? 
+                `Completed on ${formatDate(new Date(plot.secondFix.completionDate))}` : '';
+            
+            // Set extras toggles
+            document.getElementById('firstFixEvCharger').checked = plot.firstFix.extras.some(e => e.name === 'EV Charger' && e.active);
+            document.getElementById('secondFixEvCharger').checked = plot.secondFix.extras.some(e => e.name === 'EV Charger' && e.active);
+            document.getElementById('secondFixPvInstall').checked = plot.secondFix.extras.some(e => e.name === 'PV Install' && e.active);
+            
+            // Render extras
+            renderExtras('firstFix', plot.firstFix.extras);
+            renderExtras('secondFix', plot.secondFix.extras);
+            
+            // Update total prices
+            updateTotalPrice('firstFix', plot);
+            updateTotalPrice('secondFix', plot);
+            
+            // Render drawings
+            renderDrawings('firstFix', plot.firstFix.drawings);
+            
+            // Render tasks
+            renderTasks(plot.secondFix.tasks);
+            
+            // Show the modal
+            document.getElementById('plotDetailsModal').classList.remove('hidden');
+            
+            // Default to first tab
+            switchTab('firstFix');
+        }
+        
+        function closePlotDetailsModal() {
+            document.getElementById('plotDetailsModal').classList.add('hidden');
+            currentPlotId = null;
+        }
+        
+        function renderDrawings(fixType, drawings) {
+            const listElement = document.getElementById(`${fixType}DrawingsList`);
+            listElement.innerHTML = '';
+            
+            if (drawings.length === 0) {
+                listElement.innerHTML = `
+                    <p class="text-sm text-gray-500 italic">No drawings uploaded yet</p>
+                `;
+                return;
+            }
+            
+            drawings.forEach((drawing, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-gray-50 rounded-lg p-3';
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-file-alt text-blue-500 mr-3"></i>
+                        <span class="text-sm">${drawing.name}</span>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700" onclick="removeDrawing('${fixType}', ${index})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                listElement.appendChild(item);
+            });
+        }
+        
+        function handleFileUpload(event, fixType) {
+            if (!currentPlotId) return;
+            
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Convert FileList to array of file objects with name and lastModified
+            const newDrawings = Array.from(files).map(file => ({
+                name: file.name,
+                lastModified: file.lastModified,
+                // In a real app, you'd upload the file to a server and store the URL
+                // For this demo, we'll just store the file name
+                url: '#'
+            }));
+            
+            // Add new drawings
+            plot[fixType].drawings = [...plot[fixType].drawings, ...newDrawings];
+            
+            // Save and update UI
+            savePlots();
+            renderDrawings(fixType, plot[fixType].drawings);
+            
+            // Reset file input
+            event.target.value = '';
+            
+            // Show confirmation
+            showNotification(`${files.length} drawing(s) uploaded successfully`);
+        }
+        
+        function removeDrawing(fixType, index) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Remove the drawing
+            plot[fixType].drawings.splice(index, 1);
+            
+            // Save and update UI
+            savePlots();
+            renderDrawings(fixType, plot[fixType].drawings);
+            
+            // Show confirmation
+            showNotification('Drawing removed successfully');
+        }
+        
+        // Extras Functions
+        function showExtraForm(fixType) {
+            document.getElementById(`${fixType}ExtraForm`).classList.remove('hidden');
+            document.getElementById(`${fixType}ExtraName`).focus();
+        }
+        
+        function hideExtraForm(fixType) {
+            document.getElementById(`${fixType}ExtraForm`).classList.add('hidden');
+            document.getElementById(`${fixType}ExtraName`).value = '';
+            document.getElementById(`${fixType}ExtraPrice`).value = '7.50';
+            document.getElementById(`${fixType}ExtraQuantity`).value = '1';
+        }
+        
+        function saveExtra(fixType) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            const nameInput = document.getElementById(`${fixType}ExtraName`);
+            const priceInput = document.getElementById(`${fixType}ExtraPrice`);
+            const quantityInput = document.getElementById(`${fixType}ExtraQuantity`);
+            
+            const name = nameInput.value.trim();
+            const basePrice = parseFloat(priceInput.value);
+            const quantity = parseInt(quantityInput.value);
+            
+            if (!name) {
+                showNotification('Please enter a name for the extra', 'error');
+                return;
+            }
+            
+            if (isNaN(basePrice) || basePrice < 0) {
+                showNotification('Please enter a valid price', 'error');
+                return;
+            }
+            
+            if (isNaN(quantity) || quantity < 1) {
+                showNotification('Please enter a valid quantity', 'error');
+                return;
+            }
+            
+            // Calculate total price
+            const totalPrice = basePrice * quantity;
+            
+            // Check if this extra already exists
+            const existingIndex = plot[fixType].extras.findIndex(e => 
+                e.name.toLowerCase() === name.toLowerCase() && !e.isDefault);
+            
+            if (existingIndex !== -1) {
+                // Update existing extra
+                plot[fixType].extras[existingIndex].price = totalPrice;
+                plot[fixType].extras[existingIndex].quantity = quantity;
+                plot[fixType].extras[existingIndex].active = true;
+            } else {
+                // Add new extra
+                const newExtra = {
+                    id: Date.now().toString(),
+                    name,
+                    price: totalPrice,
+                    quantity,
+                    active: true,
+                    isDefault: false
+                };
+                
+                plot[fixType].extras.push(newExtra);
+                
+                // If this is a 1st fix extra, also add it to 2nd fix
+                if (fixType === 'firstFix') {
+                    // Check if it already exists in 2nd fix
+                    const secondFixExistingIndex = plot.secondFix.extras.findIndex(e => 
+                        e.name.toLowerCase() === name.toLowerCase() && !e.isDefault);
+                    
+                    if (secondFixExistingIndex === -1) {
+                        // Add to 2nd fix with same details
+                        plot.secondFix.extras.push({
+                            id: Date.now().toString() + '-2nd',
+                            name,
+                            price: totalPrice,
+                            quantity,
+                            active: true,
+                            isDefault: false
+                        });
+                    }
+                }
+            }
+            
+            // Save and update UI
+            savePlots();
+            renderExtras(fixType, plot[fixType].extras);
+            updateTotalPrice(fixType, plot);
+            
+            // If we added to 2nd fix as well, update that UI too
+            if (fixType === 'firstFix') {
+                renderExtras('secondFix', plot.secondFix.extras);
+                updateTotalPrice('secondFix', plot);
+            }
+            
+            // Hide form
+            hideExtraForm(fixType);
+            
+            // Show confirmation
+            showNotification(`Extra "${name}" added successfully`);
+        }
+        
+        function renderExtras(fixType, extras) {
+            const listElement = document.getElementById(`${fixType}ExtrasList`);
+            listElement.innerHTML = '';
+            
+            // Filter out default extras which are handled separately
+            const customExtras = extras.filter(extra => !extra.isDefault && extra.name !== 'EV Charger' && extra.name !== 'PV Install');
+            
+            if (customExtras.length === 0) {
+                return; // No custom extras to display
+            }
+            
+            customExtras.forEach((extra, index) => {
+                const item = document.createElement('div');
+                item.className = 'extras-item extras-box';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <label class="toggle-switch mr-2">
+                                <input type="checkbox" class="custom-extra-toggle" data-fix="${fixType}" data-index="${index}" ${extra.active ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <div>
+                                <span class="text-sm font-medium">${extra.name}</span>
+                                ${extra.quantity > 1 ? `<span class="text-xs text-gray-500 ml-1">x${extra.quantity}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium mr-3">£${extra.price.toFixed(2)}</span>
+                            <button class="text-red-500 hover:text-red-700" onclick="removeExtra('${fixType}', '${extra.id}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add event listener to the toggle
+                listElement.appendChild(item);
+            });
+            
+            // Add event listeners to all custom extra toggles
+            document.querySelectorAll('.custom-extra-toggle').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    toggleCustomExtra(this);
+                });
+            });
+        }
+        
+        function toggleExtra(element, fixType) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            const name = element.dataset.name;
+            const price = parseFloat(element.dataset.price);
+            const isActive = element.checked;
+            
+            // Check if this extra already exists
+            const existingIndex = plot[fixType].extras.findIndex(e => e.name === name);
+            
+            if (existingIndex !== -1) {
+                // Update existing extra
+                plot[fixType].extras[existingIndex].active = isActive;
+            } else if (isActive) {
+                // Add new extra
+                plot[fixType].extras.push({
+                    id: Date.now().toString(),
+                    name,
+                    price,
+                    quantity: 1,
+                    active: true,
+                    isDefault: true
+                });
+            }
+            
+            // Save and update UI
+            savePlots();
+            updateTotalPrice(fixType, plot);
+            
+            // Show confirmation
+            if (isActive) {
+                showNotification(`${name} added to ${fixType === 'firstFix' ? '1st' : '2nd'} Fix extras`);
+            } else {
+                showNotification(`${name} removed from ${fixType === 'firstFix' ? '1st' : '2nd'} Fix extras`);
+            }
+        }
+        
+        function toggleCustomExtra(element) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            const fixType = element.dataset.fix;
+            const index = parseInt(element.dataset.index);
+            const isActive = element.checked;
+            
+            // Get custom extras (non-default ones)
+            const customExtras = plot[fixType].extras.filter(e => !e.isDefault && e.name !== 'EV Charger' && e.name !== 'PV Install');
+            
+            if (index >= 0 && index < customExtras.length) {
+                const extraId = customExtras[index].id;
+                const extraIndex = plot[fixType].extras.findIndex(e => e.id === extraId);
+                
+                if (extraIndex !== -1) {
+                    // Update the active state
+                    plot[fixType].extras[extraIndex].active = isActive;
+                    
+                    // Save and update UI
+                    savePlots();
+                    updateTotalPrice(fixType, plot);
+                    
+                    // Show confirmation
+                    const name = plot[fixType].extras[extraIndex].name;
+                    if (isActive) {
+                        showNotification(`${name} added to ${fixType === 'firstFix' ? '1st' : '2nd'} Fix extras`);
+                    } else {
+                        showNotification(`${name} removed from ${fixType === 'firstFix' ? '1st' : '2nd'} Fix extras`);
+                    }
+                }
+            }
+        }
+        
+        function removeExtra(fixType, extraId) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Find the extra to remove
+            const extraIndex = plot[fixType].extras.findIndex(e => e.id === extraId);
+            
+            if (extraIndex !== -1) {
+                const extraName = plot[fixType].extras[extraIndex].name;
+                
+                // Remove the extra
+                plot[fixType].extras.splice(extraIndex, 1);
+                
+                // Save and update UI
+                savePlots();
+                renderExtras(fixType, plot[fixType].extras);
+                updateTotalPrice(fixType, plot);
+                
+                // Show confirmation
+                showNotification(`Extra "${extraName}" removed successfully`);
+            }
+        }
+        
+        function updateTotalPrice(fixType, plot) {
+            if (!plot) return;
+            
+            const totalPrice = calculateTotalPrice(fixType, plot);
+            document.getElementById(`${fixType}TotalPrice`).textContent = `£${totalPrice.toFixed(2)}`;
+            
+            // Update the UI
+            renderPlots();
+            
+            // Update activities if they exist
+            updateActivityPrices(fixType, plot.id, totalPrice);
+            renderThisWeekActivity();
+        }
+        
+        function calculateTotalPrice(fixType, plot) {
+            if (!plot) return 0;
+            
+            // Start with base price
+            let totalPrice = plot[fixType].price;
+            
+            // Add active extras
+            plot[fixType].extras.forEach(extra => {
+                if (extra.active) {
+                    totalPrice += extra.price;
+                }
+            });
+            
+            return totalPrice;
+        }
+        
+        // Task Functions
+        function renderTasks(tasks) {
+            const tasksList = document.getElementById('tasksList');
+            tasksList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = `
+                    <p class="text-sm text-gray-500 italic">No tasks added yet</p>
+                `;
+                return;
+            }
+            
+            tasks.forEach((task, index) => {
+                if (task.completed) return; // Don't show completed tasks
+                
+                const item = document.createElement('li');
+                item.className = 'task-item flex items-center justify-between bg-gray-50 rounded-lg p-3';
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <input type="checkbox" class="checkbox-ios mr-3" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                        <span class="text-sm">${task.text}</span>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700" onclick="removeTask(${index})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                tasksList.appendChild(item);
+            });
+        }
+        
+        function showNewTaskForm() {
+            document.getElementById('newTaskForm').classList.remove('hidden');
+            document.getElementById('newTaskInput').focus();
+        }
+        
+        function addNewTask() {
+            if (!currentPlotId) return;
+            
+            const taskInput = document.getElementById('newTaskInput');
+            const taskText = taskInput.value.trim();
+            
+            if (!taskText) {
+                showNotification('Please enter a task description', 'error');
+                return;
+            }
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Add new task
+            plot.secondFix.tasks.push({
+                text: taskText,
+                completed: false,
+                createdAt: new Date().toISOString()
+            });
+            
+            // Save and update UI
+            savePlots();
+            renderTasks(plot.secondFix.tasks);
+            
+            // Reset form
+            taskInput.value = '';
+            document.getElementById('newTaskForm').classList.add('hidden');
+            
+            // Show confirmation
+            showNotification('Task added successfully');
+        }
+        
+        function toggleTask(index) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Toggle task completion
+            plot.secondFix.tasks[index].completed = !plot.secondFix.tasks[index].completed;
+            
+            // If completed, animate and then remove from view
+            if (plot.secondFix.tasks[index].completed) {
+                const taskItems = document.querySelectorAll('.task-item');
+                if (taskItems[index]) {
+                    taskItems[index].classList.add('completed-task');
+                    setTimeout(() => {
+                        // Save and update UI after animation
+                        savePlots();
+                        renderTasks(plot.secondFix.tasks);
+                        
+                        // Check if all tasks are completed
+                        checkPlotCompletion(plot);
+                    }, 500);
+                }
+            } else {
+                // Save and update UI immediately if unchecked
+                savePlots();
+                renderTasks(plot.secondFix.tasks);
+            }
+        }
+        
+        function removeTask(index) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            // Remove the task
+            plot.secondFix.tasks.splice(index, 1);
+            
+            // Save and update UI
+            savePlots();
+            renderTasks(plot.secondFix.tasks);
+            
+            // Show confirmation
+            showNotification('Task removed successfully');
+        }
+        
+        function checkPlotCompletion(plot) {
+            // Check if all tasks are completed
+            const allTasksCompleted = plot.secondFix.tasks.length > 0 && 
+                                     plot.secondFix.tasks.every(task => task.completed);
+            
+            if (allTasksCompleted && plot.firstFix.completed && plot.secondFix.completed) {
+                plot.status = 'completed';
+                savePlots();
+                renderPlots();
+                showNotification(`Plot ${plot.plotNumber} marked as finaled!`, 'success');
+            }
+        }
+        
+        // Fix Completion Toggle Functions
+        function toggleFirstFixCompletion(e) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            const isCompleted = e.target.checked;
+            plot.firstFix.completed = isCompleted;
+            
+            if (isCompleted) {
+                // Set completion date
+                const now = new Date();
+                plot.firstFix.completionDate = now.toISOString();
+                document.getElementById('firstFixCompletionDate').textContent = `Completed on ${formatDate(now)}`;
+                
+                // Add to activities
+                addActivity('firstFix', plot);
+                
+                showNotification(`1st Fix for Plot ${plot.plotNumber} marked as completed!`, 'success');
+            } else {
+                plot.firstFix.completionDate = null;
+                document.getElementById('firstFixCompletionDate').textContent = '';
+                
+                // Remove from activities if exists
+                removeActivity('firstFix', plot.id);
+                
+                showNotification(`1st Fix for Plot ${plot.plotNumber} marked as incomplete`);
+            }
+            
+            // Check overall plot completion
+            checkPlotCompletion(plot);
+            
+            // Save and update UI
+            savePlots();
+            renderPlots();
+            renderThisWeekActivity();
+        }
+        
+        function toggleSecondFixCompletion(e) {
+            if (!currentPlotId) return;
+            
+            const plot = plots.find(p => p.id === currentPlotId);
+            if (!plot) return;
+            
+            const isCompleted = e.target.checked;
+            plot.secondFix.completed = isCompleted;
+            
+            if (isCompleted) {
+                // Set completion date
+                const now = new Date();
+                plot.secondFix.completionDate = now.toISOString();
+                document.getElementById('secondFixCompletionDate').textContent = `Completed on ${formatDate(now)}`;
+                
+                // Add to activities
+                addActivity('secondFix', plot);
+                
+                showNotification(`2nd Fix for Plot ${plot.plotNumber} marked as completed!`, 'success');
+            } else {
+                plot.secondFix.completionDate = null;
+                document.getElementById('secondFixCompletionDate').textContent = '';
+                
+                // Remove from activities if exists
+                removeActivity('secondFix', plot.id);
+                
+                showNotification(`2nd Fix for Plot ${plot.plotNumber} marked as incomplete`);
+            }
+            
+            // Check overall plot completion
+            checkPlotCompletion(plot);
+            
+            // Save and update UI
+            savePlots();
+            renderPlots();
+            renderThisWeekActivity();
+        }
+        
+        // Activity Tracking Functions
+        function addActivity(fixType, plot) {
+            const houseType = houseTypes.find(ht => ht.id === plot.houseTypeId);
+            if (!houseType) return;
+            
+            const fixLabel = fixType === 'firstFix' ? '1st Fix' : '2nd Fix';
+            const price = calculateTotalPrice(fixType, plot); // Include extras in the price
+            
+            // Get active extras for this fix
+            const activeExtras = plot[fixType].extras
+                .filter(extra => extra.active)
+                .map(extra => ({
+                    name: extra.name,
+                    price: extra.price,
+                    quantity: extra.quantity
+                }));
+            
+            const activity = {
+                id: Date.now().toString(),
+                plotId: plot.id,
+                plotNumber: plot.plotNumber,
+                houseTypeName: houseType.name,
+                fixType: fixType,
+                fixLabel: fixLabel,
+                price: price,
+                basePrice: plot[fixType].price,
+                extras: activeExtras,
+                completionDate: plot[fixType].completionDate,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add to activities
+            activities.push(activity);
+            
+            // Save activities
+            saveActivities();
+            
+            // Update UI
+            renderThisWeekActivity();
+        }
+        
+        function removeActivity(fixType, plotId) {
+            // Find and remove activity if it exists
+            const activityIndex = activities.findIndex(a => a.plotId === plotId && a.fixType === fixType);
+            if (activityIndex !== -1) {
+                activities.splice(activityIndex, 1);
+                saveActivities();
+                renderThisWeekActivity();
+            }
+        }
+        
+        function updateActivityPrices(fixType, plotId, newPrice) {
+            // Update price in activities if they exist
+            activities.forEach(activity => {
+                if (activity.plotId === plotId && activity.fixType === fixType) {
+                    activity.price = newPrice;
+                }
+            });
+            saveActivities();
+        }
+        
+        function deleteActivity(activityId) {
+            showConfirmationModal(
+                'Delete Activity',
+                'Are you sure you want to remove this activity from your weekly record?',
+                () => {
+                    const activityIndex = activities.findIndex(a => a.id === activityId);
+                    if (activityIndex !== -1) {
+                        // Get the activity details
+                        const activity = activities[activityIndex];
+                        
+                        // Remove from activities
+                        activities.splice(activityIndex, 1);
+                        saveActivities();
+                        
+                        // Update the plot if it exists
+                        const plot = plots.find(p => p.id === activity.plotId);
+                        if (plot) {
+                            // Unmark the fix as completed
+                            if (activity.fixType === 'firstFix') {
+                                plot.firstFix.completed = false;
+                                plot.firstFix.completionDate = null;
+                            } else if (activity.fixType === 'secondFix') {
+                                plot.secondFix.completed = false;
+                                plot.secondFix.completionDate = null;
+                            }
+                            
+                            // Update plot status if needed
+                            if (plot.status === 'completed' && (!plot.firstFix.completed || !plot.secondFix.completed)) {
+                                plot.status = 'inProgress';
+                            }
+                            
+                            savePlots();
+                            renderPlots();
+                        }
+                        
+                        renderThisWeekActivity();
+                        showNotification('Activity removed successfully');
+                    }
+                }
+            );
+        }
+        
+        function renderThisWeekActivity() {
+            const activityList = document.getElementById('activityList');
+            if (!activityList) return;
+            
+            activityList.innerHTML = '';
+            
+            // Get this week's activities
+            const thisWeekActivities = getThisWeekActivities();
+            
+            if (thisWeekActivities.length === 0) {
+                activityList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-8 text-gray-500">
+                        <i class="fas fa-calendar-check text-4xl mb-3"></i>
+                        <p class="text-base">No completed work this week</p>
+                    </div>
+                `;
+                document.getElementById('totalEarnings').textContent = '£0.00';
+                return;
+            }
+            
+            // Group by day
+            const groupedByDay = groupActivitiesByDay(thisWeekActivities);
+            
+            // Calculate total earnings
+            let totalEarnings = 0;
+            
+            // Render grouped activities
+            Object.keys(groupedByDay).sort((a, b) => new Date(b) - new Date(a)).forEach(day => {
+                const dayActivities = groupedByDay[day];
+                const dayTotal = dayActivities.reduce((sum, activity) => sum + activity.price, 0);
+                totalEarnings += dayTotal;
+                
+                const daySection = document.createElement('div');
+                daySection.className = 'mb-6';
+                
+                daySection.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-medium">${formatDateToDay(new Date(day))}</h4>
+                        <span class="text-sm font-medium">£${dayTotal.toFixed(2)}</span>
+                    </div>
+                `;
+                
+                const activitiesList = document.createElement('div');
+                activitiesList.className = 'space-y-2';
+                
+                dayActivities.forEach(activity => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item bg-gray-50 rounded-lg p-3 pl-4 relative';
+                    
+                    // Generate extras badges if any
+                    let extrasBadges = '';
+                    if (activity.extras && activity.extras.length > 0) {
+                        extrasBadges = `<div class="mt-1 flex flex-wrap">`;
+                        activity.extras.forEach(extra => {
+                            extrasBadges += `<span class="extras-badge">${extra.name}</span>`;
+                        });
+                        extrasBadges += `</div>`;
+                    }
+                    
+                    activityItem.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">Plot ${activity.plotNumber} - ${activity.fixLabel}</div>
+                                <div class="text-sm text-gray-500">${activity.houseTypeName}</div>
+                                ${extrasBadges}
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium">£${activity.price.toFixed(2)}</div>
+                                <div class="text-xs text-gray-500">${formatTime(new Date(activity.completionDate))}</div>
+                            </div>
+                        </div>
+                        <button class="delete-btn absolute top-3 right-3 text-red-500 hover:text-red-700" onclick="deleteActivity('${activity.id}')">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    `;
+                    
+                    activitiesList.appendChild(activityItem);
+                });
+                
+                daySection.appendChild(activitiesList);
+                activityList.appendChild(daySection);
+            });
+            
+            // Update total earnings
+            document.getElementById('totalEarnings').textContent = `£${totalEarnings.toFixed(2)}`;
+        }
+        
+        function getThisWeekActivities() {
+            const now = new Date();
+            const startOfWeek = getStartOfWeek(now);
+            const endOfWeek = getEndOfWeek(now);
+            
+            return activities.filter(activity => {
+                const activityDate = new Date(activity.completionDate);
+                return activityDate >= startOfWeek && activityDate <= endOfWeek;
+            });
+        }
+        
+        function groupActivitiesByDay(activities) {
+            const grouped = {};
+            
+            activities.forEach(activity => {
+                const date = new Date(activity.completionDate);
+                const day = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
+                
+                if (!grouped[day]) {
+                    grouped[day] = [];
+                }
+                
+                grouped[day].push(activity);
+            });
+            
+            return grouped;
+        }
+        
+        function updateWeekDates() {
+            const now = new Date();
+            const startOfWeek = getStartOfWeek(now);
+            const endOfWeek = getEndOfWeek(now);
+            
+            document.getElementById('weekStartDate').textContent = formatDate(startOfWeek);
+            document.getElementById('weekEndDate').textContent = formatDate(endOfWeek);
+        }
+        
+        // Confirmation Modal
+        function showConfirmationModal(title, message, callback) {
+            document.getElementById('confirmationTitle').textContent = title;
+            document.getElementById('confirmationMessage').textContent = message;
+            document.getElementById('confirmationModal').classList.remove('hidden');
+            confirmationCallback = callback;
+        }
+        
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            confirmationCallback = null;
+        }
+        
+        function executeConfirmedAction() {
+            if (confirmationCallback) {
+                confirmationCallback();
+            }
+            closeConfirmationModal();
+        }
+        
+        // Tab Switching
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Show selected tab content
+            document.getElementById(`${tabId}Tab`).classList.remove('hidden');
+            
+            // Update active tab
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        }
+        
+        // Filter and Search Functions
+        function filterContent(filter) {
+            if (filter === 'thisWeek') {
+                // Show This Week Activity view
+                document.getElementById('plotsGrid').classList.add('hidden');
+                document.getElementById('thisWeekActivity').classList.remove('hidden');
+                renderThisWeekActivity();
+            } else {
+                // Show Plots Grid view
+                document.getElementById('plotsGrid').classList.remove('hidden');
+                document.getElementById('thisWeekActivity').classList.add('hidden');
+                
+                // Filter plots
+                filterPlots(filter);
+            }
+        }
+        
+        function filterPlots(filter) {
+            const plotsGrid = document.getElementById('plotsGrid');
+            const plotCards = plotsGrid.querySelectorAll('.plot-card');
+            
+            plotCards.forEach(card => {
+                const plotId = card.dataset.plotId;
+                const plot = plots.find(p => p.id === plotId);
+                
+                if (!plot) return;
+                
+                if (filter === 'all' || plot.status === filter) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+        
+        function searchPlots(searchTerm) {
+            const plotsGrid = document.getElementById('plotsGrid');
+            const plotCards = plotsGrid.querySelectorAll('.plot-card');
+            
+            plotCards.forEach(card => {
+                const plotNumber = card.dataset.plotNumber.toLowerCase();
+                const houseType = card.dataset.houseType.toLowerCase();
+                
+                if (plotNumber.includes(searchTerm) || houseType.includes(searchTerm)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Utility Functions
+        function formatDate(date) {
+            return date.toLocaleDateString('en-GB', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+            });
+        }
+        
+        function formatDateToDay(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-GB', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'short'
+                });
+            }
+        }
+        
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+        
+        function getStartOfWeek(date) {
+            const result = new Date(date);
+            const day = result.getDay();
+            const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+            result.setDate(diff);
+            result.setHours(0, 0, 0, 0);
+            return result;
+        }
+        
+        function getEndOfWeek(date) {
+            const result = new Date(date);
+            const day = result.getDay();
+            const diff = result.getDate() + (day === 0 ? 0 : 7 - day); // Adjust for Sunday
+            result.setDate(diff);
+            result.setHours(23, 59, 59, 999);
+            return result;
+        }
+        
+        // Notification System
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 transform translate-y-0 opacity-100 ${
+                type === 'error' ? 'bg-red-500 text-white' : 
+                type === 'success' ? 'bg-green-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            // Add to document
+            document.body.appendChild(notification);
+            
+            // Remove after delay
+            setTimeout(() => {
+                notification.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Storage Functions
+        function saveHouseTypes() {
+            localStorage.setItem('houseTypes', JSON.stringify(houseTypes));
+        }
+        
+        function savePlots() {
+            localStorage.setItem('plots', JSON.stringify(plots));
+        }
+        
+        function saveActivities() {
+            localStorage.setItem('activities', JSON.stringify(activities));
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9621b9433497641b',t:'MTc1MzAwNjgwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
