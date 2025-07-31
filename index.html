@@ -140,6 +140,9 @@
                     <button id="messagesTabButton" onclick="showTab('messages')" class="tab-button py-4 px-2 border-b-2 border-transparent hover:border-blue-300 transition-colors hidden">
                         Messages <span id="pendingCount" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2 hidden">0</span>
                     </button>
+                    <button id="subcontractorMessagesTabButton" onclick="showTab('subcontractorMessages')" class="tab-button py-4 px-2 border-b-2 border-transparent hover:border-blue-300 transition-colors hidden">
+                        Messages <span id="unreadCount" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2 hidden">0</span>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -193,13 +196,47 @@
 
         <!-- Messages Tab (Admin Only) -->
         <div id="messagesTab" class="hidden max-w-6xl mx-auto p-6">
-            <div class="ios-card p-6">
-                <h2 class="text-2xl font-bold mb-6">
-                    <i class="fas fa-envelope mr-2 primary-text"></i>Day Work Requests
-                </h2>
+            <div class="ios-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-envelope mr-2 primary-text"></i>Day Work Requests
+                    </h2>
+                </div>
                 
                 <div id="dayWorkRequests" class="space-y-4">
                     <!-- Day work requests will appear here -->
+                </div>
+            </div>
+            
+            <div class="ios-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-paper-plane mr-2 primary-text"></i>Send Message to Subcontractor
+                    </h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <select id="messageRecipient" class="ios-input w-full">
+                        <option value="">Select subcontractor...</option>
+                    </select>
+                    <input type="text" id="messageSubject" placeholder="Subject" class="ios-input w-full">
+                    <textarea id="messageContent" placeholder="Message content" class="ios-input w-full h-32 resize-none"></textarea>
+                    <button onclick="sendMessage()" class="ios-button primary-bg text-white px-6 py-3">
+                        <i class="fas fa-send mr-2"></i>Send Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subcontractor Messages Tab -->
+        <div id="subcontractorMessagesTab" class="hidden max-w-6xl mx-auto p-6">
+            <div class="ios-card p-6">
+                <h2 class="text-2xl font-bold mb-6">
+                    <i class="fas fa-inbox mr-2 primary-text"></i>Messages
+                </h2>
+                
+                <div id="subcontractorMessages" class="space-y-4">
+                    <!-- Messages will appear here -->
                 </div>
             </div>
         </div>
@@ -225,6 +262,13 @@
                         <input type="number" id="firstFixPrice" placeholder="1st Fix Price" class="ios-input">
                         <input type="number" id="secondFixPrice" placeholder="2nd Fix Price" class="ios-input">
                         <input type="number" id="finalPrice" placeholder="Final Price" class="ios-input">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-file-pdf mr-2"></i>Drawing Plans (PDF, Images)
+                        </label>
+                        <input type="file" id="houseTypeFile" accept=".pdf,.jpg,.jpeg,.png,.gif" class="ios-input w-full" multiple>
+                        <p class="text-xs text-gray-500 mt-1">Upload drawing plans, specifications, or reference images</p>
                     </div>
                     <button onclick="addHouseType()" class="ios-button primary-bg text-white px-4 py-2">
                         <i class="fas fa-plus mr-2"></i>Add House Type
@@ -312,16 +356,46 @@
         
         let weeklyWork = [];
         let dayWorkRequests = [];
+        let messages = [];
 
         // Local Storage Functions
         function saveData() {
-            const data = {
-                sites: sites,
-                subcontractors: subcontractors,
-                weeklyWork: weeklyWork,
-                dayWorkRequests: dayWorkRequests
-            };
-            localStorage.setItem('subcontractorData', JSON.stringify(data));
+            try {
+                const data = {
+                    sites: sites,
+                    subcontractors: subcontractors,
+                    weeklyWork: weeklyWork,
+                    dayWorkRequests: dayWorkRequests,
+                    messages: messages
+                };
+                
+                const dataString = JSON.stringify(data);
+                
+                // Check if data is too large for localStorage (roughly 5MB limit)
+                if (dataString.length > 5000000) {
+                    // Remove file data from house types to reduce size
+                    const cleanedData = JSON.parse(JSON.stringify(data));
+                    cleanedData.sites.forEach(site => {
+                        site.houseTypes.forEach(houseType => {
+                            if (houseType.files && houseType.files.length > 0) {
+                                houseType.files = houseType.files.map(file => ({
+                                    name: file.name,
+                                    type: file.type,
+                                    data: '[File too large for storage]'
+                                }));
+                            }
+                        });
+                    });
+                    
+                    localStorage.setItem('subcontractorData', JSON.stringify(cleanedData));
+                    console.warn('File data was too large and has been removed from storage');
+                } else {
+                    localStorage.setItem('subcontractorData', dataString);
+                }
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert('Error saving data. Storage may be full. Try refreshing the page.');
+            }
         }
 
         function loadData() {
@@ -332,6 +406,7 @@
                 subcontractors = data.subcontractors || [];
                 weeklyWork = data.weeklyWork || [];
                 dayWorkRequests = data.dayWorkRequests || [];
+                messages = data.messages || [];
             }
         }
 
@@ -441,16 +516,21 @@
             const adminControls = document.getElementById('adminSiteControls');
             const thisWeekTab = document.getElementById('thisWeekTabButton');
             const messagesTab = document.getElementById('messagesTabButton');
+            const subcontractorMessagesTab = document.getElementById('subcontractorMessagesTabButton');
             
             if (currentUserType === 'admin') {
                 adminControls.classList.remove('hidden');
                 thisWeekTab.classList.add('hidden');
                 messagesTab.classList.remove('hidden');
+                subcontractorMessagesTab.classList.add('hidden');
                 updatePendingCount();
+                updateMessageRecipients();
             } else {
                 adminControls.classList.add('hidden');
                 thisWeekTab.classList.remove('hidden');
                 messagesTab.classList.add('hidden');
+                subcontractorMessagesTab.classList.remove('hidden');
+                updateUnreadCount();
             }
             
             showTab('sites');
@@ -462,6 +542,7 @@
             document.getElementById('sitesTab').classList.add('hidden');
             document.getElementById('thisWeekTab').classList.add('hidden');
             document.getElementById('messagesTab').classList.add('hidden');
+            document.getElementById('subcontractorMessagesTab').classList.add('hidden');
             
             // Show selected tab
             document.getElementById(tabName + 'Tab').classList.remove('hidden');
@@ -479,6 +560,9 @@
                 renderWeeklyWork();
             } else if (tabName === 'messages') {
                 renderDayWorkRequests();
+            } else if (tabName === 'subcontractorMessages') {
+                renderSubcontractorMessages();
+                markMessagesAsRead();
             }
         }
 
@@ -576,6 +660,7 @@
             const firstFix = parseFloat(document.getElementById('firstFixPrice').value) || 0;
             const secondFix = parseFloat(document.getElementById('secondFixPrice').value) || 0;
             const final = parseFloat(document.getElementById('finalPrice').value) || 0;
+            const fileInput = document.getElementById('houseTypeFile');
             
             if (!name) {
                 alert('Please enter a house type name');
@@ -585,23 +670,80 @@
             const newId = currentSite.houseTypes.length > 0 ? 
                 Math.max(...currentSite.houseTypes.map(h => h.id)) + 1 : 1;
             
-            currentSite.houseTypes.push({
-                id: newId,
-                name: name,
-                firstFix: firstFix,
-                secondFix: secondFix,
-                final: final
-            });
+            // Handle file uploads with better error handling
+            const files = [];
+            let filesProcessed = 0;
+            const totalFiles = fileInput.files.length;
             
-            // Clear form
-            document.getElementById('houseTypeName').value = '';
-            document.getElementById('firstFixPrice').value = '';
-            document.getElementById('secondFixPrice').value = '';
-            document.getElementById('finalPrice').value = '';
+            function saveHouseTypeWithFiles() {
+                try {
+                    currentSite.houseTypes.push({
+                        id: newId,
+                        name: name,
+                        firstFix: firstFix,
+                        secondFix: secondFix,
+                        final: final,
+                        files: files
+                    });
+                    
+                    // Clear form
+                    document.getElementById('houseTypeName').value = '';
+                    document.getElementById('firstFixPrice').value = '';
+                    document.getElementById('secondFixPrice').value = '';
+                    document.getElementById('finalPrice').value = '';
+                    document.getElementById('houseTypeFile').value = '';
+                    
+                    saveData();
+                    updateHouseTypeSelect();
+                    renderPlots();
+                    alert('House type added successfully!');
+                } catch (error) {
+                    console.error('Error saving house type:', error);
+                    alert('Error saving house type. Please try again without files or with smaller files.');
+                }
+            }
             
-            saveData();
-            updateHouseTypeSelect();
-            renderPlots();
+            if (totalFiles > 0) {
+                // Check file sizes first (limit to 5MB per file)
+                for (let i = 0; i < totalFiles; i++) {
+                    if (fileInput.files[i].size > 5 * 1024 * 1024) {
+                        alert('File size too large. Please use files smaller than 5MB.');
+                        return;
+                    }
+                }
+                
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = fileInput.files[i];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        try {
+                            files.push({
+                                name: file.name,
+                                type: file.type,
+                                data: e.target.result
+                            });
+                            filesProcessed++;
+                            
+                            // Only save when all files are processed
+                            if (filesProcessed === totalFiles) {
+                                saveHouseTypeWithFiles();
+                            }
+                        } catch (error) {
+                            console.error('Error processing file:', error);
+                            alert('Error processing files. Please try again with different files.');
+                        }
+                    };
+                    
+                    reader.onerror = function() {
+                        alert('Error reading file. Please try again.');
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            } else {
+                saveHouseTypeWithFiles();
+            }
         }
 
         function updateHouseTypeSelect() {
@@ -698,6 +840,26 @@
                             <p class="text-gray-600">
                                 <i class="fas fa-home mr-1"></i>${houseType.name}
                             </p>
+                            ${houseType.files && houseType.files.length > 0 ? `
+                                <div class="mt-2">
+                                    <p class="text-xs text-blue-600 mb-1">
+                                        <i class="fas fa-file mr-1"></i>Drawing Plans:
+                                    </p>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${houseType.files.map(file => {
+                                            if (file.data === '[File too large for storage]') {
+                                                return `<span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">
+                                                    <i class="fas fa-exclamation-triangle mr-1"></i>${file.name} (unavailable)
+                                                </span>`;
+                                            } else {
+                                                return `<a href="${file.data}" download="${file.name}" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
+                                                    <i class="fas fa-download mr-1"></i>${file.name}
+                                                </a>`;
+                                            }
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="flex space-x-2">
                             <button onclick="showAddExtrasModal(${plot.id})" class="ios-button bg-gray-100 text-gray-800 px-3 py-2 text-sm">
@@ -805,15 +967,30 @@
                 return;
             }
             
-            currentPlot.extras.push({
-                description: description,
-                quantity: quantity,
-                price: price
-            });
+            if (!currentPlot) {
+                alert('Error: No plot selected');
+                return;
+            }
             
-            saveData();
-            closeAddExtras();
-            renderPlots();
+            // Find the actual plot in the current site and update it
+            const plotIndex = currentSite.plots.findIndex(p => p.id === currentPlot.id);
+            if (plotIndex !== -1) {
+                currentSite.plots[plotIndex].extras.push({
+                    description: description,
+                    quantity: quantity,
+                    price: price
+                });
+                
+                // Update the currentPlot reference
+                currentPlot = currentSite.plots[plotIndex];
+                
+                saveData();
+                closeAddExtras();
+                renderPlots();
+                alert('Extra added successfully!');
+            } else {
+                alert('Error: Could not find plot to update');
+            }
         }
 
         // Work Claiming
@@ -1073,8 +1250,126 @@
             }
         }
 
+        // Message Management
+        function updateMessageRecipients() {
+            const select = document.getElementById('messageRecipient');
+            select.innerHTML = '<option value="">Select subcontractor...</option>';
+            
+            subcontractors.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.name;
+                option.textContent = `${sub.name} (${sub.uniqueId})`;
+                select.appendChild(option);
+            });
+        }
+
+        function sendMessage() {
+            const recipient = document.getElementById('messageRecipient').value;
+            const subject = document.getElementById('messageSubject').value.trim();
+            const content = document.getElementById('messageContent').value.trim();
+            
+            if (!recipient || !subject || !content) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            messages.push({
+                id: messages.length + 1,
+                from: 'Admin',
+                to: recipient,
+                subject: subject,
+                content: content,
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                read: false
+            });
+            
+            // Clear form
+            document.getElementById('messageRecipient').value = '';
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageContent').value = '';
+            
+            saveData();
+            alert(`Message sent to ${recipient}`);
+        }
+
+        function renderSubcontractorMessages() {
+            const container = document.getElementById('subcontractorMessages');
+            container.innerHTML = '';
+            
+            const userMessages = messages.filter(msg => msg.to === currentUser);
+            
+            if (userMessages.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">No messages</p>
+                        <p class="text-gray-400 text-sm mt-2">Messages from admin will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort messages by date (newest first)
+            userMessages.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+            
+            userMessages.forEach(message => {
+                const messageCard = document.createElement('div');
+                messageCard.className = `ios-card p-4 ${!message.read ? 'border-l-4 border-blue-400 bg-blue-50' : ''}`;
+                
+                messageCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-bold text-lg ${!message.read ? 'text-blue-800' : ''}">
+                                <i class="fas fa-envelope mr-2"></i>${message.subject}
+                            </h4>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-user mr-1"></i>From: ${message.from}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                <i class="fas fa-clock mr-1"></i>${message.date} at ${message.time}
+                            </p>
+                        </div>
+                        ${!message.read ? `
+                            <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                <i class="fas fa-circle mr-1"></i>New
+                            </span>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <p class="text-gray-700 whitespace-pre-wrap">${message.content}</p>
+                    </div>
+                `;
+                
+                container.appendChild(messageCard);
+            });
+        }
+
+        function markMessagesAsRead() {
+            messages.forEach(message => {
+                if (message.to === currentUser && !message.read) {
+                    message.read = true;
+                }
+            });
+            saveData();
+            updateUnreadCount();
+        }
+
+        function updateUnreadCount() {
+            const unreadCount = messages.filter(msg => msg.to === currentUser && !msg.read).length;
+            const countElement = document.getElementById('unreadCount');
+            
+            if (unreadCount > 0) {
+                countElement.textContent = unreadCount;
+                countElement.classList.remove('hidden');
+            } else {
+                countElement.classList.add('hidden');
+            }
+        }
+
         // Initialize the application
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967f901ff592af90',t:'MTc1Mzk5MDc3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967ff4815678948a',t:'MTc1Mzk5NDg5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
