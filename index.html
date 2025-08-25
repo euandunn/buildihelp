@@ -331,6 +331,61 @@
         </div>
     </div>
 
+    <!-- Plot Kit Modal -->
+    <div id="plotKitModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="ios-card p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold primary-text">
+                    <i class="fas fa-toolbox mr-2"></i>Plot Kit Materials
+                </h2>
+                <button onclick="closePlotKit()" class="ios-button bg-gray-200 text-gray-800 px-4 py-2">Close</button>
+            </div>
+            
+            <!-- Plot Selection -->
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                <label class="block text-sm font-medium text-blue-800 mb-2">Select Plot Number:</label>
+                <select id="plotKitPlotSelect" class="ios-input w-full max-w-xs">
+                    <option value="">Select plot...</option>
+                </select>
+            </div>
+            
+            <!-- Materials List -->
+            <div class="grid gap-4 mb-6" id="plotKitMaterials">
+                <!-- Materials will be populated here -->
+            </div>
+            
+            <!-- Add Extra Material -->
+            <div class="ios-card p-4 mb-6 bg-green-50">
+                <h3 class="font-bold mb-3 text-green-800">
+                    <i class="fas fa-plus mr-2"></i>Add Extra Material
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="extraMaterialName" placeholder="Material Name" class="ios-input">
+                    <input type="number" id="extraMaterialQuantity" placeholder="Quantity" class="ios-input" value="0">
+                    <select id="extraMaterialColour" class="ios-input">
+                        <option value="White">White</option>
+                        <option value="Black">Black</option>
+                        <option value="Brushed Chrome">Brushed Chrome</option>
+                        <option value="Polished Chrome">Polished Chrome</option>
+                    </select>
+                    <button onclick="addExtraMaterial()" class="ios-button bg-green-600 text-white px-4 py-2">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Save Buttons -->
+            <div class="flex justify-end space-x-3">
+                <button onclick="exportPlotKitToPDF()" class="ios-button bg-green-600 text-white px-6 py-3">
+                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                </button>
+                <button onclick="savePlotKit()" class="ios-button primary-bg text-white px-6 py-3">
+                    <i class="fas fa-save mr-2"></i>Save Plot Kit
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let currentUser = null;
@@ -357,6 +412,71 @@
         let weeklyWork = [];
         let dayWorkRequests = [];
         let messages = [];
+        let plotKits = [];
+        
+        // Default materials list
+        const defaultMaterials = [
+            '1 Gang Switch',
+            '2 Gang Switch',
+            '3 Gang Switch',
+            'Intermediate Switch',
+            'Unswitched Single Socket',
+            'Switched Double Socket',
+            'Shaver Socket',
+            'Switched Fused Spur',
+            'Fan Isolator',
+            '4" Fan',
+            '1 Gang Grid Plate & 2G Yoke',
+            '2 Gang Grid Plate & 2G Yoke',
+            '3 Gang Grid Plate & 4G Yoke',
+            '4 Gang Grid Plate & 4G Yoke',
+            '6 Gang Grid Plate & 2x 4G Yoke',
+            'DP Grid Switch (Rockers In Extras)',
+            '2 Way Lighting Grid Switch',
+            'Intermediate Lighting Grid Switch',
+            'Fuse Grid Carrier',
+            '45a Cooker Isolator Switch w/Neon',
+            '45a Cooker Outlet Plate',
+            '2 Gang Euro Plate',
+            '4 Gang Euro Plate',
+            'Euro Blank',
+            'Coax Euro Module',
+            'Cat 6 Euro Module',
+            'Type F Euro Module',
+            'BT Euro Module',
+            'BT Slave Point',
+            '1 Gang Blank Plate',
+            '2 Gang Blank Plate',
+            'Wago Wiring Centre',
+            'Pendant',
+            'Batten Holder',
+            'Drum Fitting',
+            'Downlight (Colour Required)',
+            'GU10',
+            'Lamps',
+            'Smoke Detector',
+            'Heat Detector',
+            'Carbon Monoxide (Mains)',
+            'Carbon Monoxide (Battery)',
+            'MultiSmoke',
+            'Ei450',
+            'RadioLINK',
+            'Doorbell Chime',
+            'Doorbell Push',
+            'Outside Light',
+            'Outside Socket',
+            'Clear Connection Box',
+            'Wiska Box',
+            'Consumer Unit',
+            '32a RCBO',
+            '20a RCBO',
+            '32a MCB',
+            '20a MCB',
+            '16a MCB',
+            '6a MCB',
+            'Blank MCB',
+            'EV Charger'
+        ];
 
         // Local Storage Functions
         function saveData() {
@@ -366,7 +486,8 @@
                     subcontractors: subcontractors,
                     weeklyWork: weeklyWork,
                     dayWorkRequests: dayWorkRequests,
-                    messages: messages
+                    messages: messages,
+                    plotKits: plotKits
                 };
                 
                 const dataString = JSON.stringify(data);
@@ -407,6 +528,7 @@
                 weeklyWork = data.weeklyWork || [];
                 dayWorkRequests = data.dayWorkRequests || [];
                 messages = data.messages || [];
+                plotKits = data.plotKits || [];
             }
         }
 
@@ -865,6 +987,11 @@
                             <button onclick="showAddExtrasModal(${plot.id})" class="ios-button bg-gray-100 text-gray-800 px-3 py-2 text-sm">
                                 <i class="fas fa-plus mr-1"></i>Extras
                             </button>
+                            ${currentUserType === 'subcontractor' ? `
+                                <button onclick="showPlotKitModal(${plot.id})" class="ios-button bg-blue-100 text-blue-800 px-3 py-2 text-sm">
+                                    <i class="fas fa-toolbox mr-1"></i>Plot Kit
+                                </button>
+                            ` : ''}
                             ${currentUserType === 'admin' ? `
                                 <button onclick="deletePlot(${plot.id})" class="ios-button bg-red-100 text-red-600 px-3 py-2 text-sm">
                                     <i class="fas fa-trash"></i>
@@ -1015,7 +1142,8 @@
                 plot: plot.number,
                 workType: workType,
                 amount: amount,
-                date: new Date().toLocaleDateString()
+                date: new Date().toLocaleDateString(),
+                week: getCurrentWeek()
             });
             
             saveData();
@@ -1023,6 +1151,19 @@
         }
 
         // Weekly Work Management
+        function getWeekNumber(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+            const week1 = new Date(d.getFullYear(), 0, 4);
+            return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
+        function getCurrentWeek() {
+            const now = new Date();
+            return `${now.getFullYear()}-W${getWeekNumber(now)}`;
+        }
+
         function renderWeeklyWork() {
             const container = document.getElementById('weeklyWork');
             const totalElement = document.getElementById('weeklyTotal');
@@ -1030,8 +1171,12 @@
             container.innerHTML = '';
             let total = 0;
             
-            // Filter work for current subcontractor
-            const currentSubcontractorWork = weeklyWork.filter(work => work.subcontractor === currentUser);
+            const currentWeek = getCurrentWeek();
+            
+            // Filter work for current subcontractor and current week only
+            const currentSubcontractorWork = weeklyWork.filter(work => 
+                work.subcontractor === currentUser && work.week === currentWeek
+            );
             
             // Render claimed work
             currentSubcontractorWork.forEach((work, index) => {
@@ -1368,8 +1513,279 @@
             }
         }
 
+        // Plot Kit Management
+        function showPlotKitModal(plotId) {
+            currentPlot = currentSite.plots.find(p => p.id === plotId);
+            
+            // Populate plot selection dropdown
+            const plotSelect = document.getElementById('plotKitPlotSelect');
+            plotSelect.innerHTML = '<option value="">Select plot...</option>';
+            
+            currentSite.plots.forEach(plot => {
+                const option = document.createElement('option');
+                option.value = plot.id;
+                option.textContent = `Plot ${plot.number}`;
+                if (plot.id === plotId) {
+                    option.selected = true;
+                }
+                plotSelect.appendChild(option);
+            });
+            
+            document.getElementById('plotKitModal').classList.remove('hidden');
+            renderPlotKitMaterials();
+        }
+
+        function closePlotKit() {
+            document.getElementById('plotKitModal').classList.add('hidden');
+            currentPlot = null;
+        }
+
+        function renderPlotKitMaterials() {
+            const container = document.getElementById('plotKitMaterials');
+            container.innerHTML = '';
+            
+            const selectedPlotId = document.getElementById('plotKitPlotSelect').value;
+            if (!selectedPlotId) return;
+            
+            // Find existing plot kit or create new one
+            let plotKit = plotKits.find(pk => pk.plotId == selectedPlotId && pk.siteId === currentSite.id);
+            if (!plotKit) {
+                plotKit = {
+                    id: plotKits.length + 1,
+                    plotId: parseInt(selectedPlotId),
+                    siteId: currentSite.id,
+                    materials: defaultMaterials.map(material => ({
+                        name: material,
+                        quantity: 0,
+                        colour: 'White'
+                    })),
+                    extraMaterials: []
+                };
+            }
+            
+            // Render default materials
+            plotKit.materials.forEach((material, index) => {
+                const materialCard = document.createElement('div');
+                materialCard.className = 'ios-card p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center';
+                
+                materialCard.innerHTML = `
+                    <div class="font-medium text-gray-800">${material.name}</div>
+                    <input type="number" value="${material.quantity}" onchange="updateMaterialQuantity(${index}, this.value, false)" class="ios-input" min="0">
+                    <select onchange="updateMaterialColour(${index}, this.value, false)" class="ios-input">
+                        <option value="White" ${material.colour === 'White' ? 'selected' : ''}>White</option>
+                        <option value="Black" ${material.colour === 'Black' ? 'selected' : ''}>Black</option>
+                        <option value="Brushed Chrome" ${material.colour === 'Brushed Chrome' ? 'selected' : ''}>Brushed Chrome</option>
+                        <option value="Polished Chrome" ${material.colour === 'Polished Chrome' ? 'selected' : ''}>Polished Chrome</option>
+                    </select>
+                    <button onclick="deleteMaterial(${index}, false)" class="text-red-500 hover:text-red-700 p-1 rounded transition-colors" title="Delete material">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                `;
+                
+                container.appendChild(materialCard);
+            });
+            
+            // Render extra materials
+            plotKit.extraMaterials.forEach((material, index) => {
+                const materialCard = document.createElement('div');
+                materialCard.className = 'ios-card p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-green-50';
+                
+                materialCard.innerHTML = `
+                    <div class="font-medium text-green-800">
+                        <i class="fas fa-plus mr-2"></i>${material.name}
+                    </div>
+                    <input type="number" value="${material.quantity}" onchange="updateMaterialQuantity(${index}, this.value, true)" class="ios-input" min="0">
+                    <select onchange="updateMaterialColour(${index}, this.value, true)" class="ios-input">
+                        <option value="White" ${material.colour === 'White' ? 'selected' : ''}>White</option>
+                        <option value="Black" ${material.colour === 'Black' ? 'selected' : ''}>Black</option>
+                        <option value="Brushed Chrome" ${material.colour === 'Brushed Chrome' ? 'selected' : ''}>Brushed Chrome</option>
+                        <option value="Polished Chrome" ${material.colour === 'Polished Chrome' ? 'selected' : ''}>Polished Chrome</option>
+                    </select>
+                    <button onclick="deleteMaterial(${index}, true)" class="text-red-500 hover:text-red-700 p-1 rounded transition-colors" title="Delete material">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                `;
+                
+                container.appendChild(materialCard);
+            });
+            
+            // Store current plot kit for updates
+            window.currentPlotKit = plotKit;
+        }
+
+        function updateMaterialQuantity(index, quantity, isExtra) {
+            if (!window.currentPlotKit) return;
+            
+            const materials = isExtra ? window.currentPlotKit.extraMaterials : window.currentPlotKit.materials;
+            if (materials[index]) {
+                materials[index].quantity = parseInt(quantity) || 0;
+            }
+        }
+
+        function updateMaterialColour(index, colour, isExtra) {
+            if (!window.currentPlotKit) return;
+            
+            const materials = isExtra ? window.currentPlotKit.extraMaterials : window.currentPlotKit.materials;
+            if (materials[index]) {
+                materials[index].colour = colour || 'White';
+            }
+        }
+
+        function deleteMaterial(index, isExtra) {
+            if (!window.currentPlotKit) return;
+            
+            if (isExtra) {
+                window.currentPlotKit.extraMaterials.splice(index, 1);
+            } else {
+                // For default materials, actually delete them now
+                window.currentPlotKit.materials.splice(index, 1);
+            }
+            
+            renderPlotKitMaterials();
+        }
+
+        function addExtraMaterial() {
+            const name = document.getElementById('extraMaterialName').value.trim();
+            const quantity = parseInt(document.getElementById('extraMaterialQuantity').value) || 0;
+            const colour = document.getElementById('extraMaterialColour').value.trim() || 'White';
+            
+            if (!name) {
+                alert('Please enter a material name');
+                return;
+            }
+            
+            if (!window.currentPlotKit) {
+                alert('Please select a plot first');
+                return;
+            }
+            
+            window.currentPlotKit.extraMaterials.push({
+                name: name,
+                quantity: quantity,
+                colour: colour
+            });
+            
+            // Clear form
+            document.getElementById('extraMaterialName').value = '';
+            document.getElementById('extraMaterialQuantity').value = '0';
+            document.getElementById('extraMaterialColour').value = 'White';
+            
+            renderPlotKitMaterials();
+        }
+
+        function exportPlotKitToPDF() {
+            if (!window.currentPlotKit) {
+                alert('No plot kit to export');
+                return;
+            }
+            
+            const selectedPlotId = document.getElementById('plotKitPlotSelect').value;
+            if (!selectedPlotId) {
+                alert('Please select a plot');
+                return;
+            }
+            
+            const plot = currentSite.plots.find(p => p.id == selectedPlotId);
+            if (!plot) {
+                alert('Plot not found');
+                return;
+            }
+            
+            // Create PDF content
+            let pdfContent = `PLOT KIT MATERIALS\n\n`;
+            pdfContent += `Site: ${currentSite.name}\n`;
+            pdfContent += `Plot: ${plot.number}\n`;
+            pdfContent += `Date: ${new Date().toLocaleDateString()}\n`;
+            pdfContent += `Generated by: ${currentUser}\n\n`;
+            pdfContent += `${'='.repeat(50)}\n\n`;
+            
+            // Add materials with quantities > 0
+            const materialsWithQuantity = window.currentPlotKit.materials.filter(m => m.quantity > 0);
+            const extrasWithQuantity = window.currentPlotKit.extraMaterials.filter(m => m.quantity > 0);
+            
+            if (materialsWithQuantity.length > 0) {
+                pdfContent += `STANDARD MATERIALS:\n`;
+                pdfContent += `${'='.repeat(30)}\n`;
+                materialsWithQuantity.forEach(material => {
+                    pdfContent += `${material.name.padEnd(35)} | Qty: ${material.quantity.toString().padStart(3)} | Color: ${material.colour}\n`;
+                });
+                pdfContent += `\n`;
+            }
+            
+            if (extrasWithQuantity.length > 0) {
+                pdfContent += `EXTRA MATERIALS:\n`;
+                pdfContent += `${'='.repeat(30)}\n`;
+                extrasWithQuantity.forEach(material => {
+                    pdfContent += `${material.name.padEnd(35)} | Qty: ${material.quantity.toString().padStart(3)} | Color: ${material.colour}\n`;
+                });
+                pdfContent += `\n`;
+            }
+            
+            if (materialsWithQuantity.length === 0 && extrasWithQuantity.length === 0) {
+                pdfContent += `No materials with quantities specified.\n`;
+            }
+            
+            pdfContent += `\n${'='.repeat(50)}\n`;
+            pdfContent += `Total Items: ${materialsWithQuantity.length + extrasWithQuantity.length}\n`;
+            pdfContent += `Total Quantity: ${[...materialsWithQuantity, ...extrasWithQuantity].reduce((sum, m) => sum + m.quantity, 0)}\n`;
+            
+            // Create and download the file
+            const blob = new Blob([pdfContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Plot_Kit_${currentSite.name.replace(/\s+/g, '_')}_Plot_${plot.number}_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('Plot kit exported successfully! Note: Exported as text file due to browser limitations. You can convert to PDF using any text-to-PDF converter.');
+        }
+
+        function savePlotKit() {
+            if (!window.currentPlotKit) {
+                alert('No plot kit to save');
+                return;
+            }
+            
+            const selectedPlotId = document.getElementById('plotKitPlotSelect').value;
+            if (!selectedPlotId) {
+                alert('Please select a plot');
+                return;
+            }
+            
+            // Update plot ID in case it was changed
+            window.currentPlotKit.plotId = parseInt(selectedPlotId);
+            
+            // Find existing plot kit or add new one
+            const existingIndex = plotKits.findIndex(pk => 
+                pk.plotId === window.currentPlotKit.plotId && pk.siteId === currentSite.id
+            );
+            
+            if (existingIndex !== -1) {
+                plotKits[existingIndex] = window.currentPlotKit;
+            } else {
+                plotKits.push(window.currentPlotKit);
+            }
+            
+            saveData();
+            closePlotKit();
+            alert('Plot kit saved successfully!');
+        }
+
+        // Update plot selection change handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const plotSelect = document.getElementById('plotKitPlotSelect');
+            if (plotSelect) {
+                plotSelect.addEventListener('change', function() {
+                    renderPlotKitMaterials();
+                });
+            }
+        });
+
         // Initialize the application
         init();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967ff4815678948a',t:'MTc1Mzk5NDg5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'974eb84bc0f31ed8',t:'MTc1NjE2Mjk3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
